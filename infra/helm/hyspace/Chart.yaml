@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hyspace
+description: "HySpace - 좌석/회의실 예약 시스템"
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

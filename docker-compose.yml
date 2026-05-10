@@ -1,0 +1,44 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://hyspace:changeme@db:5432/hyspace
+      KEYCLOAK_URL: https://keycloak.internal
+      KEYCLOAK_REALM: hynix
+      KEYCLOAK_CLIENT_ID: hyspace
+      KEYCLOAK_CLIENT_SECRET: ""
+      CORS_ORIGINS: "http://localhost:8080,http://localhost:3000"
+      DEV_MODE: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: hyspace
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: hyspace
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hyspace"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
