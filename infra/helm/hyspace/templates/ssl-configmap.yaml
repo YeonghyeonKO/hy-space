@@ -1,0 +1,11 @@
+{{- if and .Values.ssl.enabled .Values.ssl.caCert (not .Values.ssl.existingConfigMap) (not .Values.ssl.existingSecret) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hyspace.fullname" . }}-ca-cert
+  labels:
+    {{- include "hyspace.labels" . | nindent 4 }}
+data:
+  {{ .Values.ssl.key }}: |
+    {{- .Values.ssl.caCert | nindent 4 }}
+{{- end }}

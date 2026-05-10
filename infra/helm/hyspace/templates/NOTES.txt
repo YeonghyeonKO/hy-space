@@ -1,0 +1,28 @@
+HySpace has been deployed!
+
+Access URL:
+{{- if .Values.ingress.enabled }}
+  https://{{ include "hyspace.host" . }}
+{{- else }}
+  kubectl port-forward svc/{{ include "hyspace.fullname" . }}-frontend 8080:{{ .Values.frontend.port }}
+  Open http://localhost:8080
+{{- end }}
+
+Run database migrations:
+  kubectl exec -it deploy/{{ include "hyspace.fullname" . }}-backend -- alembic upgrade head
+
+{{- if .Values.app.devMode }}
+
+DEV MODE is enabled. Seed the database:
+  curl -X POST https://{{ include "hyspace.host" . }}/api/v1/seed
+{{- end }}
+
+{{- if not .Values.keycloak.enabled }}
+
+WARNING: Keycloak SSO is disabled. Set keycloak.enabled=true for production.
+{{- end }}
+
+{{- if not .Values.postgresql.internal }}
+
+Using external PostgreSQL: {{ .Values.postgresql.host }}:{{ .Values.postgresql.port }}/{{ .Values.postgresql.database }}
+{{- end }}

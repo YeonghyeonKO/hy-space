@@ -1,0 +1,115 @@
+# -- Instance name (required). Used for resource naming and ingress hostname.
+instanceName: ""
+
+backend:
+  image:
+    repository: dk02315/hyspace-backend
+    tag: v0.1.0
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  readinessProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+  livenessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 10
+  port: 8000
+  # -- Extra environment variables for the backend
+  extraEnv: []
+
+frontend:
+  image:
+    repository: dk02315/hyspace-frontend
+    tag: v0.1.0
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+ingress:
+  enabled: true
+  domain: aipp02.skhynix.com
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+
+# -- Keycloak SSO configuration
+keycloak:
+  enabled: false
+  serverUrl: ""
+  realm: ""
+  clientId: ""
+  clientSecret: ""
+  employeeClaim: empno
+  existingSecret: ""
+  existingSecretKeys:
+    clientSecret: client-secret
+
+# -- SSL CA certificate for Keycloak (corporate PKI)
+ssl:
+  enabled: false
+  caCert: ""
+  existingConfigMap: ""
+  existingSecret: ""
+  key: ca.crt
+
+# -- External PostgreSQL (recommended for production)
+postgresql:
+  # -- When true, deploy a PostgreSQL StatefulSet. When false, use external DB.
+  internal: false
+  host: ""
+  port: 5432
+  database: hyspace
+  username: hyspace
+  password: ""
+  existingSecret: ""
+  existingSecretKey: postgresql-password
+  # -- Internal PostgreSQL settings (only when internal=true)
+  storage:
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# -- Application settings
+app:
+  devMode: true
+  corsOrigins: ""
+  storage: 5Gi
+  storageClass: ""
+
+# -- Autoscaling for backend
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilization: 70
+
+# -- Private registry credentials
+imageRegistry:
+  enabled: false
+  server: ""
+  username: ""
+  password: ""
+
+imagePullSecrets: []

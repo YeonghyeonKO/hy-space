@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hyspace.fullname" . }}-backend
+  labels:
+    {{- include "hyspace.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.backend.port }}
+      targetPort: {{ .Values.backend.port }}
+      protocol: TCP
+  selector:
+    {{- include "hyspace.backendSelectorLabels" . | nindent 4 }}

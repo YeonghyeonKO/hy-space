@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hyspace.fullname" . }}-backend
+  labels:
+    {{- include "hyspace.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hyspace.backendSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hyspace.backendSelectorLabels" . | nindent 8 }}
+    spec:
+      {{- with (include "hyspace.imagePullSecrets" . | fromYamlArray) }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+              protocol: TCP
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hyspace.dbSecretName" . }}
+                  key: {{ include "hyspace.dbSecretKey" . }}
+            - name: DATABASE_URL
+              value: {{ include "hyspace.databaseUrl" . | quote }}
+            {{- if .Values.keycloak.enabled }}
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hyspace.secretName" . }}
+                  key: {{ .Values.keycloak.existingSecretKeys.clientSecret }}
+            {{- end }}
+            {{- range .Values.backend.extraEnv }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "hyspace.fullname" . }}-config
+          {{- if .Values.ssl.enabled }}
+          volumeMounts:
+            - name: ssl-ca-cert
+              mountPath: /etc/ssl/certs/corporate-ca.crt
+              subPath: {{ .Values.ssl.key }}
+              readOnly: true
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.backend.port }}
+            initialDelaySeconds: {{ .Values.backend.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.readinessProbe.timeoutSeconds }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.backend.port }}
+            initialDelaySeconds: {{ .Values.backend.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.livenessProbe.timeoutSeconds }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+      {{- if .Values.ssl.enabled }}
+      volumes:
+        - name: ssl-ca-cert
+          {{- include "hyspace.sslVolume" . | nindent 10 }}
+      {{- end }}
