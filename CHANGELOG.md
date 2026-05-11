@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.1 (2026-05-11)
+
+### Features
+- **Keycloak JWT/JWKS auth**: replace dummy profile with real `preferred_username` from Keycloak token, auto-create user on first login
+- **`/users/me` returns `bookable_floors`**: resolved from user's affiliation lookup
+
+### Fixes
+- **Alembic ModuleNotFoundError**: add `PYTHONPATH=/app` to Dockerfile and `sys.path` fix in `alembic/env.py`
+
+---
+
 ## v0.1.0 (2026-05-10)
 
 ### Features
