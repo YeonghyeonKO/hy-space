@@ -10,6 +10,8 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY . .
 
+ENV PYTHONPATH=/app
+
 EXPOSE 8000
 
 CMD ["gunicorn", "app.main:app", \
