@@ -7,6 +7,7 @@ class UserRead(BaseModel):
     email: str
     affiliation: str
     team: str | None = None
+    bookable_floors: list[str] = []
 
     model_config = {"from_attributes": True}
 

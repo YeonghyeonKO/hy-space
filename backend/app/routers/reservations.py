@@ -5,20 +5,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.auth import get_current_user
 from app.models.reservation import Reservation
 from app.models.user import User, Affiliation
 from app.models.campus import Floor
 from app.schemas.reservation import ReservationCreate, ReservationRead
 
 router = APIRouter(prefix="/api/v1", tags=["reservations"])
-
-
-async def get_current_user(db: AsyncSession = Depends(get_db)) -> User:
-    result = await db.execute(select(User).limit(1))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=401, detail="No user found")
-    return user
 
 
 @router.get("/reservations/my", response_model=list[ReservationRead])
